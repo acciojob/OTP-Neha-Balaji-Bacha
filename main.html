@@ -1,16 +1,109 @@
 <!DOCTYPE html>
-
 <html>
-
 <head>
-	<link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8" />
+  <title>Verify Your Account</title>
 </head>
-
 <body>
-	<!-- the entire body must be written by student -->
-    <script type="text/javascript" src="./script.js">
+
+  <h1 id="verification_heading">Verify Your Account</h1>
+  <p id="verification_subtext">We emailed you the six digit code. Enter the code below to confirm your email address.</p>
+
+  <div class="code-container" aria-label="otp inputs">
+    <input id="code-1" class="code" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" />
+    <input id="code-2" class="code" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" />
+    <input id="code-3" class="code" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" />
+    <input id="code-4" class="code" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" />
+    <input id="code-5" class="code" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" />
+    <input id="code-6" class="code" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" />
+  </div>
+
+<script>
+  // required behavior for the 6 OTP inputs
+  (function () {
+    const inputs = Array.from(document.querySelectorAll('.code-container .code'));
+
+    // focus first input on load
+    window.addEventListener('load', () => {
+      if (inputs.length) inputs[0].focus();
+    });
+
+    // helper: move focus to index if valid
+    function focusIndex(idx) {
+      if (idx >= 0 && idx < inputs.length) inputs[idx].focus();
+    }
+
+    // for each input attach events
+    inputs.forEach((input, idx) => {
+      // allow only digits on input, then move forward if filled
+      input.addEventListener('input', (e) => {
+        const value = e.target.value;
+        // keep only first digit (0-9)
+        const digit = value.replace(/\D/g, '').slice(0,1);
+        e.target.value = digit;
+
+        if (digit !== '') {
+          // move to next field
+          const next = idx + 1;
+          if (next < inputs.length) focusIndex(next);
+        }
+      });
+
+      // handle keydown for backspace/navigation and left/right arrows
+      input.addEventListener('keydown', (e) => {
+        const key = e.key;
+
+        if (key === 'Backspace') {
+          // if current has a digit, clear it (default will clear)
+          // if empty, move to previous and clear it
+          if (input.value === '') {
+            const prev = idx - 1;
+            if (prev >= 0) {
+              e.preventDefault(); // prevent default so we control deletion
+              inputs[prev].value = '';
+              focusIndex(prev);
+            }
+            // if none previous, do nothing
+          } // else let browser clear current value (and keep focus)
+        } else if (key === 'ArrowLeft') {
+          e.preventDefault();
+          focusIndex(idx - 1);
+        } else if (key === 'ArrowRight') {
+          e.preventDefault();
+          focusIndex(idx + 1);
+        } else {
+          // allow only numeric keys, navigation keys, backspace handled above
+          // For all other non-control keys, if not a digit, prevent input.
+          // But allow when Control/Meta/Alt pressed (copy/paste).
+          if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+            // if it's a single character and not a digit, prevent
+            if (key.length === 1 && /\D/.test(key)) {
+              e.preventDefault();
+            }
+          }
+        }
+      });
+
+      // handle paste: if user pastes 6-digit string, distribute across inputs
+      input.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const paste = (e.clipboardData || window.clipboardData).getData('text');
+        const digits = paste.replace(/\D/g, '').split('');
+        if (digits.length === 0) return;
+        let i = idx;
+        for (let d of digits) {
+          if (i >= inputs.length) break;
+          inputs[i].value = d;
+          i++;
+        }
+        // focus the next empty or last input
+        const nextEmpty = inputs.findIndex((el) => el.value === '');
+        if (nextEmpty !== -1) focusIndex(nextEmpty);
+        else focusIndex(inputs.length - 1);
+      });
+    });
+  })();
 </script>
 
 </body>
-
 </html>
